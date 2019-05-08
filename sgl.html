@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="vector.js"></script>
+    <script src="particle.js"></script>
+</head>
+<body>
+    <canvas id="game" style="border:2px dashed olive"></canvas>
+    <script>
+        var canvas=document.getElementById("game");
+        var ctx=canvas.getContext("2d");
+        var width=canvas.width=600;
+        var height=canvas.height=200;
+
+        var p=particle.create(50,height,10,-Math.PI/2,0.1);
+
+        // Game loop functions
+        function update()
+        {
+            p.update();
+        }
+
+        function render()
+        {
+            ctx.clearRect(0,0,width,height);
+            ctx.beginPath();
+            ctx.arc(p.position.getX(),p.position.getY(),10,0,2*Math.PI,false);
+            ctx.fill();
+        }
+
+        function loop()
+        {
+            update();
+            render();
+
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>

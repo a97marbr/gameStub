@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="vector.js"></script>
+    <script src="particle.js"></script>
+</head>
+<body>
+    <pre id="gamepad-info"></pre>
+    <canvas id="game" style="border:2px dashed olive"></canvas>
+    <script>
+        var gamepadInfo=document.getElementById("gamepad-info");
+        var canvas=document.getElementById("game");
+        var ctx=canvas.getContext("2d");
+        var width=canvas.width=600;
+        var height=canvas.height=200;
+
+        var p=particle.create(50,height,0,-Math.PI/2,0);
+        p.position.setY(height-p.radius);
+
+        // Gamepad stuff
+        window.addEventListener("gamepadconnected", function(e) {
+            var gp = navigator.getGamepads()[e.gamepad.index];
+            gamepadInfo.innerHTML = "Gamepad connected at index " + gp.index + ": " + gp.id + ". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.";
+
+            loop();
+        });
+
+        window.addEventListener("gamepaddisconnected", function(e) {
+            gamepadInfo.innerHTML = "Waiting for gamepad.";
+
+            cancelRequestAnimationFrame(start);
+        });
+
+        function pollGamepads() {
+            var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+            for (var i = 0; i < gamepads.length; i++) {
+                var gp = gamepads[i];
+                if (gp) {
+                    gamepadInfo.innerHTML = "Gamepad connected at index " + gp.index + ": " + gp.id +". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.";
+                    loop();
+                    clearInterval(interval);
+                }
+            }
+        }
+
+        function buttonPressed(b) {
+            if (typeof(b) == "object") {
+                return b.pressed;
+            }
+            return b == 1.0;
+        }
+
+        // Game loop functions
+        function update()
+        {
+            // Check if we have gamepad
+            let gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+            if (!gamepads) {
+                console.log("No gamepads!");
+                return;
+            }else{          
+                // Print debug on screen
+                let str="";
+                for(let i=0;i<gamepads[0].buttons.length;i++){
+                    if(i>0)str+=" ";
+                    str+=i+":"+gamepads[0].buttons[i].pressed;
+                }
+                str+="<br>"
+                for(let i=0;i<gamepads[0].axes.length;i++){
+                    if(i>0)str+=" ";
+                    str+=i+":"+gamepads[0].axes[i]  ;
+                }
+                str+="<br>"
+                str+="V:("+p.velocity.getLength()+","+p.velocity.getAngle()+")";
+
+                document.getElementById("gamepad-info").innerHTML=str;
+            }
+
+            // Update our particle, p
+            let gp = gamepads[0];
+            let acc=vector.create(0,0);
+            if (gp.axes[0]<-.5) {
+                acc.setLength(0.01);
+                acc.setAngle(-Math.PI);
+            } else if (gp.axes[0]>.5) {
+                acc.setLength(0.01);
+                acc.setAngle(0);
+            }
+
+            if(gp.buttons[0].pressed){
+                p.color="rgba(255,0,0,0.5)";
+            }else{
+                p.color="rgba(0,0,0,0.5)";
+            }
+
+            p.accelerate(acc);
+            p.update();
+        }
+
+        function render()
+        {
+            ctx.clearRect(0,0,width,height);
+            ctx.beginPath();
+            ctx.arc(p.position.getX(),p.position.getY(),10,0,2*Math.PI,false);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+        }
+
+        function loop()
+        {
+            update();
+            render();
+
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
